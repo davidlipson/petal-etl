@@ -2,30 +2,30 @@ import { DataTypes } from "sequelize";
 import { Pipeline } from "./pipeline";
 
 export class BikesharesPipeline extends Pipeline {
-  propertyTypeMap = {
-    id: {
-      type: DataTypes.STRING,
-      primaryKey: true,
-    },
-    name: DataTypes.STRING,
-    physical_configuration: DataTypes.STRING,
-    altitude: DataTypes.FLOAT,
-    address: DataTypes.STRING,
-    capacity: DataTypes.STRING,
-    is_recharging_stations: DataTypes.BOOLEAN,
-    rental_methods: DataTypes.ARRAY(DataTypes.STRING),
-    longitude: DataTypes.FLOAT,
-    latitude: DataTypes.FLOAT,
-    geometry: DataTypes.GEOMETRY("POINT", 4326),
-  };
-
   constructor() {
     super(
       "https://tor.publicbikesystem.net/ube/gbfs/v1/en/station_information",
-      "bikeshares"
+      "bikeshares",
+      {
+        id: {
+          type: DataTypes.STRING,
+          primaryKey: true,
+        },
+        name: DataTypes.STRING,
+        physical_configuration: DataTypes.STRING,
+        altitude: DataTypes.FLOAT,
+        address: DataTypes.STRING,
+        capacity: DataTypes.STRING,
+        is_recharging_stations: DataTypes.BOOLEAN,
+        rental_methods: DataTypes.ARRAY(DataTypes.STRING),
+        longitude: DataTypes.FLOAT,
+        latitude: DataTypes.FLOAT,
+        geometry: DataTypes.GEOMETRY("POINT", 4326),
+      }
     );
   }
 
+  // switch this to standard flow?
   childTransform = () => {
     const file = this.extractedDataPaths?.find((file) =>
       file.path.endsWith("station_information")
@@ -57,12 +57,6 @@ export class BikesharesPipeline extends Pipeline {
       this.saveTransformedData({
         features: transformedData,
       });
-    }
-  };
-
-  load = () => {
-    if (this.transformedGeoJsonPath) {
-      this.jsonToTable(this.transformedGeoJsonPath);
     }
   };
 }

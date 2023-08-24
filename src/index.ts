@@ -1,4 +1,4 @@
-import { parseFlag } from "./helpers";
+import { clearTempFiles, parseFlag } from "./helpers";
 import {
   AddressesPipeline,
   BikesharesPipeline,
@@ -15,6 +15,12 @@ import dotenv from "dotenv";
 (async () => {
   dotenv.config();
 
+  console.log("--------- CLEARING TEMP FILES ---------");
+
+  clearTempFiles();
+
+  console.log("--------- DONE CLEARING FILES ---------");
+
   //const test = parseFlag('test');
 
   const RUN_EXTRACT = true;
@@ -27,10 +33,9 @@ import dotenv from "dotenv";
     //new AddressesPipeline(),
     //new PropertiesPipeline(),
     //new GreenspacesPipeline(),
-    new NeighbourhoodsPipeline(),
-    /*
+    //new NeighbourhoodsPipeline(),
     new BikewaysPipeline(),
-    new SignalsPipeline(),*/
+    /*new SignalsPipeline(),*/
   ];
 
   // download all data sources

@@ -9,6 +9,9 @@ export const zipPath = `${tempDataPath}/zip`;
 export const unzipPath = `${tempDataPath}/unzip`;
 export const transormedPath = `${tempDataPath}/transformed`;
 
+export type PropertyTypeMap = { [key: string]: any };
+export type PropertyNameMap = { [key: string]: string };
+
 export type SimpleFile =
   | File
   | {
@@ -23,13 +26,21 @@ export class Pipeline {
   transformPath: string;
   extractedDataPaths?: SimpleFile[];
   transformedGeoJsonPath?: string;
-  propertyTypeMap?: any; // move to constructor?
+  propertyTypeMap?: PropertyTypeMap; // fix type
+  propertyNameMap?: PropertyNameMap; // fix type
 
-  constructor(url: string, name: string) {
+  constructor(
+    url: string,
+    name: string,
+    propertyTypeMap?: any,
+    propertyNameMap?: any
+  ) {
     this.url = url;
     this.name = name;
     this.unzipPath = `${unzipPath}/${this.name}`;
     this.transformPath = `${transormedPath}/${this.name}`;
+    this.propertyTypeMap = propertyTypeMap;
+    this.propertyNameMap = propertyNameMap;
   }
 
   extract = () => {
@@ -89,7 +100,6 @@ export class Pipeline {
     });
   };
 
-
   // we can probably unify all the transform logic into this one place
   // if all are json/geojson files
   transform = () => {
@@ -97,10 +107,16 @@ export class Pipeline {
     this.childTransform();
   };
 
-  childTransform = () => {};
+  childTransform = () => {
+    if (this.extractedDataPaths && this.extractedDataPaths.length > 0) {
+      this.transformGeoJson(this.extractedDataPaths[0], this.propertyNameMap);
+    }
+  };
 
   load = () => {
-    console.log(`No ${this.name} load.`);
+    if (this.transformedGeoJsonPath) {
+      this.jsonToTable(this.transformedGeoJsonPath);
+    }
   };
 
   jsonToTable = (path: string) => {
@@ -108,7 +124,16 @@ export class Pipeline {
       if (this.propertyTypeMap) {
         const file = fs.readFileSync(path);
         const json = JSON.parse(file.toString());
-        db.define(this.name, this.propertyTypeMap);
+        db.define(this.name, this.propertyTypeMap, {
+          indexes:
+            (this.propertyTypeMap.geometry && [
+              {
+                using: "gist",
+                fields: ["geometry"],
+              },
+            ]) ||
+            [],
+        });
         db.sync({ force: true })
           .then(() => {
             db.models[this.name]
@@ -131,23 +156,22 @@ export class Pipeline {
     });
   };
 
-  transformGeoJson = (
-    file: SimpleFile,
-    propertyMap: { [key: string]: string }
-  ) => {
-    const jsonData = JSON.parse(file.data.toString());
-    jsonData.features.forEach((feature: any) => {
-      delete feature.type;
-      Object.keys(feature.properties).forEach((property: any) => {
-        if (propertyMap[property]) {
-          feature[propertyMap[property] || property] =
-            feature.properties[property];
-        }
-        delete feature.properties[property];
+  transformGeoJson = (file: SimpleFile, propertyMap?: PropertyNameMap) => {
+    if (propertyMap) {
+      const jsonData = JSON.parse(file.data.toString());
+      jsonData.features.forEach((feature: any) => {
+        delete feature.type;
+        Object.keys(feature.properties).forEach((property: any) => {
+          if (propertyMap[property]) {
+            feature[propertyMap[property] || property] =
+              feature.properties[property];
+          }
+          delete feature.properties[property];
+        });
+        delete feature.properties;
       });
-      delete feature.properties;
-    });
-    this.saveTransformedData(jsonData);
+      this.saveTransformedData(jsonData);
+    }
   };
 
   saveTransformedData = (data: any) => {
