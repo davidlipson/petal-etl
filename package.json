@@ -1,0 +1,28 @@
+{
+  "name": "etl",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "npx tsc && cd build && node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "adm-zip": "^0.5.10",
+    "axios": "^1.4.0",
+    "commander": "^11.0.0",
+    "decompress": "^4.2.1",
+    "dotenv": "^16.3.1",
+    "fs": "^0.0.1-security",
+    "https": "^1.0.0",
+    "pg": "^8.11.3",
+    "sequelize": "^6.32.1",
+    "typescript": "^5.1.6"
+  },
+  "devDependencies": {
+    "@types/decompress": "^4.2.4",
+    "@types/node": "^20.5.3"
+  }
+}
