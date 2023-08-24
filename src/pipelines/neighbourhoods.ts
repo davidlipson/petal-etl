@@ -20,19 +20,4 @@ export class NeighbourhoodsPipeline extends Pipeline {
       }
     );
   }
-
-  load = () => {
-    if (this.transformedGeoJsonPath) {
-      this.jsonToTable(this.transformedGeoJsonPath);
-    }
-  };
-
-  childTransform = () => {
-    const file = this.extractedDataPaths?.find((file) =>
-      file.path.endsWith(".geojson")
-    );
-    if (file) {
-      this.transformGeoJson(file, this.propertyNameMap);
-    }
-  };
 }

@@ -103,8 +103,10 @@ export class Pipeline {
   // we can probably unify all the transform logic into this one place
   // if all are json/geojson files
   transform = () => {
+    console.log("Transforming", this.name);
     this.makeTransformedDataDirectory();
     this.childTransform();
+    console.log("Done transforming", this.name);
   };
 
   childTransform = () => {
@@ -114,15 +116,9 @@ export class Pipeline {
   };
 
   load = () => {
-    if (this.transformedGeoJsonPath) {
-      this.jsonToTable(this.transformedGeoJsonPath);
-    }
-  };
-
-  jsonToTable = (path: string) => {
-    return new Promise(async (resolve, reject) => {
-      if (this.propertyTypeMap) {
-        const file = fs.readFileSync(path);
+    return new Promise((resolve, reject) => {
+      if (this.propertyTypeMap && this.transformedGeoJsonPath) {
+        const file = fs.readFileSync(this.transformedGeoJsonPath);
         const json = JSON.parse(file.toString());
         db.define(this.name, this.propertyTypeMap, {
           indexes:

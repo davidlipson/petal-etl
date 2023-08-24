@@ -1,4 +1,5 @@
 import { clearTempFiles, parseFlag } from "./helpers";
+import { db } from "./db";
 import {
   AddressesPipeline,
   BikesharesPipeline,
@@ -28,14 +29,14 @@ import dotenv from "dotenv";
   const RUN_LOAD = true;
 
   const pipelines: Pipeline[] = [
-    //new CentrelinePipeline(),
-    //new BikesharesPipeline(),
-    //new AddressesPipeline(),
-    //new PropertiesPipeline(),
-    //new GreenspacesPipeline(),
-    //new NeighbourhoodsPipeline(),
+    /*new CentrelinePipeline(),
+    new BikesharesPipeline(),
+    new AddressesPipeline(),
+    new PropertiesPipeline(),
+    new GreenspacesPipeline(),
+    new NeighbourhoodsPipeline(),*/
     new BikewaysPipeline(),
-    /*new SignalsPipeline(),*/
+    new SignalsPipeline(),
   ];
 
   // download all data sources
@@ -61,6 +62,8 @@ import dotenv from "dotenv";
     console.log("--------- TRANSFORMATION COMPLETE ---------\n");
   }
 
+  // working when each pipeline is isolated but not altogether...
+  // empty tables...?
   // load data into database
   if (RUN_LOAD) {
     console.log("--------- RUNNING LOAD ---------");

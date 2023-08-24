@@ -2,7 +2,6 @@ import { DataTypes } from "sequelize";
 import { Pipeline } from "./pipeline";
 
 export class CentrelinePipeline extends Pipeline {
-  // { "type": "Feature", "properties": { "_id": 1, "CENTRELINE_ID": 914600, "LINEAR_NAME_ID": 2141, "LINEAR_NAME_FULL": "Morrison St", "LINEAR_NAME_FULL_LEGAL": "Morrison Street", "ADDRESS_L": "None", "ADDRESS_R": "None", "PARITY_L": "N", "PARITY_R": "N", "LO_NUM_L": 0, "HI_NUM_L": 0, "LO_NUM_R": 0, "HI_NUM_R": 0, "BEGIN_ADDR_POINT_ID_L": 0, "END_ADDR_POINT_ID_L": 0, "BEGIN_ADDR_POINT_ID_R": 0, "END_ADDR_POINT_ID_R": 0, "BEGIN_ADDR_L": 0, "END_ADDR_L": 0, "BEGIN_ADDR_R": 0, "END_ADDR_R": 0, "LOW_NUM_ODD": 0, "HIGH_NUM_ODD": 0, "LOW_NUM_EVEN": 0, "HIGH_NUM_EVEN": 0, "LINEAR_NAME": "Morrison", "LINEAR_NAME_TYPE": "St", "LINEAR_NAME_DIR": "None", "LINEAR_NAME_DESC": "ET", "LINEAR_NAME_LABEL": "Morrison St", "FROM_INTERSECTION_ID": 13470555, "TO_INTERSECTION_ID": 13470560, "ONEWAY_DIR_CODE": 0, "ONEWAY_DIR_CODE_DESC": "Not One-Way", "FEATURE_CODE": 201500, "FEATURE_CODE_DESC": "Local", "JURISDICTION": "CITY OF TORONTO", "CENTRELINE_STATUS": "None", "OBJECTID": 1, "MI_PRINX": 1 }, "geometry": { "type": "MultiLineString", "coordinates": [ [ [ -79.508749502141896, 43.597441242633003 ], [ -79.509871630129695, 43.597202099867701 ] ] ] } },
   constructor() {
     super(
       "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/1d079757-377b-4564-82df-eb5638583bfb/resource/7bc94ccf-7bcf-4a7d-88b1-bdfc8ec5aaf1/download/centreline-version-2-4326.geojson",

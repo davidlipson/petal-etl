@@ -20,19 +20,4 @@ export class PropertiesPipeline extends Pipeline {
       }
     );
   }
-
-  load = () => {
-    if (this.transformedGeoJsonPath) {
-      this.jsonToTable(this.transformedGeoJsonPath);
-    }
-  };
-
-  childTransform = () => {
-    const file = this.extractedDataPaths?.find((file) =>
-      file.path.endsWith("_geojson.json")
-    );
-    if (file) {
-      this.transformGeoJson(file, this.propertyNameMap);
-    }
-  };
 }
