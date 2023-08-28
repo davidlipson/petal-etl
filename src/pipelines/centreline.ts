@@ -3,17 +3,14 @@ import { Pipeline } from "./pipeline";
 
 export class CentrelinePipeline extends Pipeline {
   constructor() {
-    super(
-      "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/1d079757-377b-4564-82df-eb5638583bfb/resource/7bc94ccf-7bcf-4a7d-88b1-bdfc8ec5aaf1/download/centreline-version-2-4326.geojson",
-      "centreline",
-      {
+    super({
+      url: "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/1d079757-377b-4564-82df-eb5638583bfb/resource/7bc94ccf-7bcf-4a7d-88b1-bdfc8ec5aaf1/download/centreline-version-2-4326.geojson",
+      name: "centreline",
+      propertyTypeMap: {
         id: {
-          type: DataTypes.STRING,
+          type: DataTypes.INTEGER,
           primaryKey: true,
         },
-        centreline_id: DataTypes.INTEGER,
-        linear_name_id: DataTypes.INTEGER,
-        full_name: DataTypes.STRING,
         legal_name: DataTypes.STRING,
         address_l: DataTypes.STRING,
         address_r: DataTypes.STRING,
@@ -39,7 +36,6 @@ export class CentrelinePipeline extends Pipeline {
         linear_name_type: DataTypes.STRING,
         linear_name_dir: DataTypes.STRING,
         description: DataTypes.STRING,
-        label: DataTypes.STRING,
         from_intersection_id: DataTypes.INTEGER,
         to_intersection_id: DataTypes.INTEGER,
         oneway_dir_code: DataTypes.INTEGER,
@@ -48,11 +44,8 @@ export class CentrelinePipeline extends Pipeline {
         fcode_description: DataTypes.STRING,
         geometry: DataTypes.GEOMETRY,
       },
-      {
+      propertyNameMap: {
         _id: "id",
-        CENTRELINE_ID: "centreline_id",
-        LINEAR_NAME_ID: "linear_name_id",
-        LINEAR_NAME_FULL: "full_name",
         LINEAR_NAME_FULL_LEGAL: "legal_name",
         ADDRESS_L: "address_l",
         ADDRESS_R: "address_r",
@@ -78,14 +71,13 @@ export class CentrelinePipeline extends Pipeline {
         LINEAR_NAME_TYPE: "linear_name_type",
         LINEAR_NAME_DIR: "linear_name_dir",
         LINEAR_NAME_DESC: "description",
-        LINEAR_NAME_LABEL: "label",
         FROM_INTERSECTION_ID: "from_intersection_id",
         TO_INTERSECTION_ID: "to_intersection_id",
         ONEWAY_DIR_CODE: "oneway_dir_code",
         ONEWAY_DIR_CODE_DESC: "oneway_dir_desc",
         FEATURE_CODE: "fcode",
         FEATURE_CODE_DESC: "fcode_description",
-      }
-    );
+      },
+    });
   }
 }

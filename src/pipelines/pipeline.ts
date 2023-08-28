@@ -19,32 +19,42 @@ export type SimpleFile =
       path: string;
     };
 
+export interface PipelineArgs {
+  url?: string;
+  name?: string;
+  propertyTypeMap?: PropertyTypeMap;
+  propertyNameMap?: PropertyNameMap;
+}
+
 export class Pipeline {
-  url: string;
-  name: string;
-  unzipPath: string;
-  transformPath: string;
+  url?: string;
+  name?: string;
+  unzipPath?: string;
+  transformPath?: string;
   extractedDataPaths?: SimpleFile[];
   transformedGeoJsonPath?: string;
   propertyTypeMap?: PropertyTypeMap; // fix type
   propertyNameMap?: PropertyNameMap; // fix type
 
-  constructor(
-    url: string,
-    name: string,
-    propertyTypeMap?: any,
-    propertyNameMap?: any
-  ) {
+  constructor(args: PipelineArgs) {
+    const { url, name, propertyTypeMap, propertyNameMap } = args;
     this.url = url;
     this.name = name;
-    this.unzipPath = `${unzipPath}/${this.name}`;
-    this.transformPath = `${transormedPath}/${this.name}`;
     this.propertyTypeMap = propertyTypeMap;
     this.propertyNameMap = propertyNameMap;
+
+    if (this.name) {
+      this.unzipPath = `${unzipPath}/${this.name}`;
+      this.transformPath = `${transormedPath}/${this.name}`;
+    }
   }
 
   extract = () => {
     return new Promise(async (resolve, reject) => {
+      if (!this.url || !this.name) {
+        return resolve("No url or name defined.");
+      }
+
       this.makeExtractedDataDirectory();
 
       // step 1. download zip file to data/temp/zip
@@ -115,39 +125,43 @@ export class Pipeline {
     }
   };
 
+  defineModal = () => {
+    return new Promise((resolve, reject) => {
+      if (!this.name || !this.propertyTypeMap) {
+        return resolve("No name defined.");
+      }
+      db.define(this.name, this.propertyTypeMap, {
+        freezeTableName: true,
+        indexes:
+          (this.propertyTypeMap.geom && [
+            {
+              using: "gist",
+              fields: ["geom"],
+            },
+          ]) ||
+          [],
+      });
+      return resolve("Defined.");
+    });
+  };
+
   load = () => {
     return new Promise((resolve, reject) => {
-      if (this.propertyTypeMap && this.transformedGeoJsonPath) {
+      if (this.propertyTypeMap && this.transformedGeoJsonPath && this.name) {
         const file = fs.readFileSync(this.transformedGeoJsonPath);
         const json = JSON.parse(file.toString());
-        db.define(this.name, this.propertyTypeMap, {
-          indexes:
-            (this.propertyTypeMap.geometry && [
-              {
-                using: "gist",
-                fields: ["geometry"],
-              },
-            ]) ||
-            [],
-        });
-        db.sync({ force: true })
+        db.models[this.name]
+          .bulkCreate(json.features, {
+            returning: false,
+          })
           .then(() => {
-            db.models[this.name]
-              .bulkCreate(json.features, {
-                returning: false,
-              })
-              .then(() => {
-                resolve("Done loading.");
-              })
-              .catch((err) => {
-                reject(err);
-              });
+            resolve("Done loading.");
           })
           .catch((err) => {
             reject(err);
           });
       } else {
-        reject();
+        resolve("No propertyTypeMap or transformedGeoJsonPath defined.");
       }
     });
   };
@@ -193,7 +207,7 @@ export class Pipeline {
       fs.mkdirSync(unzipPath);
     }
 
-    if (!fs.existsSync(this.unzipPath)) {
+    if (this.unzipPath && !fs.existsSync(this.unzipPath)) {
       fs.mkdirSync(this.unzipPath);
     }
   };
@@ -211,7 +225,7 @@ export class Pipeline {
       fs.mkdirSync(transormedPath);
     }
 
-    if (!fs.existsSync(this.transformPath)) {
+    if (this.transformPath && !fs.existsSync(this.transformPath)) {
       fs.mkdirSync(this.transformPath);
     }
   };

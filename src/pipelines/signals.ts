@@ -3,12 +3,12 @@ import { Pipeline } from "./pipeline";
 
 export class SignalsPipeline extends Pipeline {
   constructor() {
-    super(
-      "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/1a106e88-f734-4179-b3fe-d690a6187a71/resource/68690966-eb29-45ca-99e2-dc9ecf73aee1/download/traffic-beacon-4326.geojson",
-      "signals",
-      {
+    super({
+      url: "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/1a106e88-f734-4179-b3fe-d690a6187a71/resource/68690966-eb29-45ca-99e2-dc9ecf73aee1/download/traffic-beacon-4326.geojson",
+      name: "signals",
+      propertyTypeMap: {
         id: {
-          type: DataTypes.STRING,
+          type: DataTypes.INTEGER,
           primaryKey: true,
         },
         main_street: DataTypes.STRING,
@@ -19,7 +19,7 @@ export class SignalsPipeline extends Pipeline {
         additional_info: DataTypes.STRING,
         geometry: DataTypes.GEOMETRY,
       },
-      {
+      propertyNameMap: {
         _id: "id",
         MAIN_STREET: "main_street",
         MIDBLOCK_ROUTE: "midblock_route",
@@ -27,7 +27,7 @@ export class SignalsPipeline extends Pipeline {
         SIDE2_STREET: "side_street_2",
         PRIVATE_ACCESS: "private_access",
         ADDITIONAL_INFO: "additional_info",
-      }
-    );
+      },
+    });
   }
 }

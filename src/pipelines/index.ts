@@ -6,3 +6,4 @@ export * from "./greenspaces";
 export * from "./properties";
 export * from "./bikeshares";
 export * from "./signals";
+export * from "./petal-graph";

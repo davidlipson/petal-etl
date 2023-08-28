@@ -3,12 +3,12 @@ import { Pipeline } from "./pipeline";
 
 export class BikesharesPipeline extends Pipeline {
   constructor() {
-    super(
-      "https://tor.publicbikesystem.net/ube/gbfs/v1/en/station_information",
-      "bikeshares",
-      {
+    super({
+      url: "https://tor.publicbikesystem.net/ube/gbfs/v1/en/station_information",
+      name: "bikeshares",
+      propertyTypeMap: {
         id: {
-          type: DataTypes.STRING,
+          type: DataTypes.INTEGER,
           primaryKey: true,
         },
         name: DataTypes.STRING,
@@ -21,8 +21,8 @@ export class BikesharesPipeline extends Pipeline {
         longitude: DataTypes.FLOAT,
         latitude: DataTypes.FLOAT,
         geometry: DataTypes.GEOMETRY("POINT", 4326),
-      }
-    );
+      },
+    });
   }
 
   // switch this to standard flow?

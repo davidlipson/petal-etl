@@ -3,12 +3,12 @@ import { Pipeline } from "./pipeline";
 
 export class BikewaysPipeline extends Pipeline {
   constructor() {
-    super(
-      "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/ac87ebfc-d67a-4a63-9528-5474ff33cb68/resource/2af3f58c-562b-4e77-accf-210b6bbf111d/download/bike-network-data-4326.geojson",
-      "bikeways",
-      {
+    super({
+      url: "https://ckan0.cf.opendata.inter.prod-toronto.ca/dataset/ac87ebfc-d67a-4a63-9528-5474ff33cb68/resource/2af3f58c-562b-4e77-accf-210b6bbf111d/download/bike-network-data-4326.geojson",
+      name: "bikeways",
+      propertyTypeMap: {
         id: {
-          type: DataTypes.STRING,
+          type: DataTypes.INTEGER,
           primaryKey: true,
         },
         street_name: DataTypes.STRING,
@@ -17,13 +17,13 @@ export class BikewaysPipeline extends Pipeline {
         length: DataTypes.FLOAT,
         geometry: DataTypes.GEOMETRY,
       },
-      {
+      propertyNameMap: {
         _id: "id",
         STREET_NAME: "street_name",
         FROM_STREET: "from_street",
         TO_STREET: "to_street",
         Shape__Length: "length",
-      }
-    );
+      },
+    });
   }
 }
