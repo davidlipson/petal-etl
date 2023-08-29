@@ -11,6 +11,7 @@ export const transormedPath = `${tempDataPath}/transformed`;
 
 export type PropertyTypeMap = { [key: string]: any };
 export type PropertyNameMap = { [key: string]: string };
+export type PropertyFilterMap = { [key: string]: any[] };
 
 export type SimpleFile =
   | File
@@ -24,6 +25,7 @@ export interface PipelineArgs {
   name?: string;
   propertyTypeMap?: PropertyTypeMap;
   propertyNameMap?: PropertyNameMap;
+  propertyFilterMap?: PropertyFilterMap;
 }
 
 export class Pipeline {
@@ -35,13 +37,16 @@ export class Pipeline {
   transformedGeoJsonPath?: string;
   propertyTypeMap?: PropertyTypeMap; // fix type
   propertyNameMap?: PropertyNameMap; // fix type
+  propertyFilterMap?: PropertyFilterMap; // fix type
 
   constructor(args: PipelineArgs) {
-    const { url, name, propertyTypeMap, propertyNameMap } = args;
+    const { url, name, propertyTypeMap, propertyNameMap, propertyFilterMap } =
+      args;
     this.url = url;
     this.name = name;
     this.propertyTypeMap = propertyTypeMap;
     this.propertyNameMap = propertyNameMap;
+    this.propertyFilterMap = propertyFilterMap;
 
     if (this.name) {
       this.unzipPath = `${unzipPath}/${this.name}`;
@@ -120,9 +125,7 @@ export class Pipeline {
   };
 
   childTransform = () => {
-    if (this.extractedDataPaths && this.extractedDataPaths.length > 0) {
-      this.transformGeoJson(this.extractedDataPaths[0], this.propertyNameMap);
-    }
+    this.transformGeoJson();
   };
 
   defineModal = () => {
@@ -132,11 +135,12 @@ export class Pipeline {
       }
       db.define(this.name, this.propertyTypeMap, {
         freezeTableName: true,
+        timestamps: false,
         indexes:
-          (this.propertyTypeMap.geom && [
+          (this.propertyTypeMap.geometry && [
             {
               using: "gist",
-              fields: ["geom"],
+              fields: ["geometry"],
             },
           ]) ||
           [],
@@ -166,9 +170,16 @@ export class Pipeline {
     });
   };
 
-  transformGeoJson = (file: SimpleFile, propertyMap?: PropertyNameMap) => {
-    if (propertyMap) {
-      const jsonData = JSON.parse(file.data.toString());
+  transformGeoJson = () => {
+    if (
+      this.extractedDataPaths &&
+      this.extractedDataPaths.length > 0 &&
+      this.propertyNameMap
+    ) {
+      const file = this.extractedDataPaths[0];
+      const propertyMap = this.propertyNameMap;
+      const filters = this.propertyFilterMap;
+      let jsonData = JSON.parse(file.data.toString());
       jsonData.features.forEach((feature: any) => {
         delete feature.type;
         Object.keys(feature.properties).forEach((property: any) => {
@@ -180,6 +191,13 @@ export class Pipeline {
         });
         delete feature.properties;
       });
+      if (filters) {
+        Object.keys(filters).forEach((filter: any) => {
+          jsonData.features = jsonData.features.filter((row: any) => {
+            return filters[filter].includes(row[filter]);
+          });
+        });
+      }
       this.saveTransformedData(jsonData);
     }
   };

@@ -18,8 +18,8 @@ import { ETL } from "./etl";
 (async () => {
   dotenv.config();
   const pipelines: Pipeline[] = [
-    /*new CentrelinePipeline(),
-    new BikesharesPipeline(),
+    new CentrelinePipeline(),
+    /*new BikesharesPipeline(),
     new AddressesPipeline(),
     new PropertiesPipeline(),
     new GreenspacesPipeline(),
@@ -27,6 +27,7 @@ import { ETL } from "./etl";
     new BikewaysPipeline(),
     new SignalsPipeline(),*/
     new PetalGraphPipeline(),
+    //new PropertiesPipeline(),
     // add pipelines that have empty functions and only transform for additional tables.
   ];
 

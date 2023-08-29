@@ -1,2 +1,4 @@
 import { Sequelize } from "sequelize";
-export const db = new Sequelize("postgres://postgres@localhost:5432/petaldev");
+export const db = new Sequelize("postgres://postgres@localhost:5432/petaldev", {
+  logging: false,
+});

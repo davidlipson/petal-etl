@@ -16,7 +16,10 @@ export class PropertiesPipeline extends Pipeline {
       },
       propertyNameMap: {
         OBJECTID: "id",
-        FTYPE: "type",
+        F_TYPE: "type",
+      },
+      propertyFilterMap: {
+        type: ["COMMON"],
       },
     });
   }
