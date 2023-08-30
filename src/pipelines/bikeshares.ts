@@ -13,13 +13,10 @@ export class BikesharesPipeline extends Pipeline {
         },
         name: DataTypes.STRING,
         physical_configuration: DataTypes.STRING,
-        altitude: DataTypes.FLOAT,
         address: DataTypes.STRING,
         capacity: DataTypes.STRING,
         is_recharging_stations: DataTypes.BOOLEAN,
         rental_methods: DataTypes.ARRAY(DataTypes.STRING),
-        longitude: DataTypes.FLOAT,
-        latitude: DataTypes.FLOAT,
         geometry: DataTypes.GEOMETRY("POINT", 4326),
       },
     });
@@ -35,8 +32,6 @@ export class BikesharesPipeline extends Pipeline {
       const transformedData = jsonData.data.stations.map((station: any) => {
         const newStation = {
           ...station,
-          longitude: station.lon,
-          latitude: station.lat,
           id: station.station_id,
           geometry: {
             type: "Point",
@@ -44,6 +39,7 @@ export class BikesharesPipeline extends Pipeline {
           },
         };
         delete newStation.station_id;
+        delete newStation.altitude;
         delete newStation.lon;
         delete newStation.lat;
         delete newStation.rental_uris;

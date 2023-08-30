@@ -2,6 +2,12 @@ import { Pipeline } from "./pipelines/pipeline";
 import { db } from "./db";
 import { clearTempFiles } from "./helpers";
 
+export enum ETLState {
+  EXTRACT = "EXTRACT",
+  TRANSFORM = "TRANSFORM",
+  LOAD = "LOAD",
+}
+
 export interface runArgs {
   extract: boolean;
   transform: boolean;
@@ -10,78 +16,78 @@ export interface runArgs {
 
 export class ETL {
   pipelines: Pipeline[];
+  state?: ETLState;
+  currentPipeline?: Pipeline;
+
   constructor(pipelines: Pipeline[] = []) {
     this.pipelines = pipelines;
   }
 
-  clearTempFiles = () => {
-    console.log("--------- CLEARING TEMP FILES ---------");
-
-    clearTempFiles();
-
-    console.log("--------- DONE CLEARING FILES ---------");
+  log = (progress?: number) => {
+    let text = "";
+    const progressText = progress ? ` - ${(progress * 100).toFixed(2)}%` : "";
+    if (this.state && this.currentPipeline) {
+      text =
+        `----- ${this.state}ING - ${this.currentPipeline.name}${progressText} ------`.toUpperCase();
+    } else if (this.state) {
+      text = `----- ${this.state}ING${progressText} ------`.toUpperCase();
+    } else if (this.currentPipeline) {
+      text =
+        `----- ${this.currentPipeline.name}${progressText} ------`.toUpperCase();
+    }
+    process.stdout.clearLine(0);
+    process.stdout.cursorTo(0);
+    process.stdout.write(`${text}`);
   };
 
-  extract = async () => {
-    console.log("--------- RUNNING EXTRACTION ---------");
-
-    for (let i = 0; i < this.pipelines.length; i++) {
-      await this.pipelines[i].extract();
-    }
-
-    console.log("--------- EXTRACTION COMPLETE ---------\n");
+  setState = (state: ETLState) => {
+    this.state = state;
+    this.log();
   };
 
-  transform = async () => {
-    console.log("--------- RUNNING TRANSFORMATION ---------");
-
-    for (let i = 0; i < this.pipelines.length; i++) {
-      await this.pipelines[i].transform();
-    }
-
-    console.log("--------- TRANSFORMATION COMPLETE ---------\n");
+  setPipeline = (pipeline: Pipeline) => {
+    this.currentPipeline = pipeline;
+    this.log();
   };
 
-  load = async () => {
-    console.log("--------- RUNNING LOAD ---------");
-
+  stage = async (state: ETLState) => {
+    this.setState(state);
     for (let i = 0; i < this.pipelines.length; i++) {
-      await this.pipelines[i].load();
+      const pipeline = this.pipelines[i];
+      this.setPipeline(pipeline);
+      if (state === ETLState.TRANSFORM) {
+        await pipeline.transform();
+      } else if (state === ETLState.EXTRACT) {
+        await pipeline.extract(this.log);
+      } else if (state === ETLState.LOAD) {
+        await pipeline.load();
+      }
     }
-
-    console.log("--------- LOAD COMPLETE ---------\n");
   };
 
   defineModels = async () => {
-    console.log("--------- DEFINING MODELS ---------");
-
     for (let i = 0; i < this.pipelines.length; i++) {
       await this.pipelines[i].defineModal();
     }
 
     await db.sync({ force: true });
-
-    console.log("--------- MODELS DEFINED ---------\n");
   };
 
   run = async (args: runArgs) => {
     const { transform, extract, load } = args;
-    console.log("--------- STARTING ETL ---------");
-    console.log("RUNNING: ", args);
-    //this.clearTempFiles();
+    clearTempFiles();
 
     if (extract) {
-      await this.extract();
+      await this.stage(ETLState.EXTRACT);
     }
 
     if (transform) {
-      await this.transform();
+      await this.stage(ETLState.TRANSFORM);
     }
 
     if (load) {
       await this.defineModels();
-      await this.load();
+      await this.stage(ETLState.LOAD);
     }
-    console.log("--------- ETL COMPLETE ---------\n");
   };
 }

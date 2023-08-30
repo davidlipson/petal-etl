@@ -26,9 +26,6 @@ export class AddressesPipeline extends Pipeline {
         fcode: DataTypes.STRING,
         fcode_description: DataTypes.STRING,
         classification: DataTypes.STRING,
-        name: DataTypes.STRING,
-        ward: DataTypes.STRING,
-        municipality: DataTypes.STRING,
         geometry: DataTypes.GEOMETRY("POINT", 4326),
       },
       propertyNameMap: {
@@ -43,9 +40,6 @@ export class AddressesPipeline extends Pipeline {
         DISTANCE: "distance",
         FCODE: "fcode",
         CLASS: "classification",
-        NAME: "name",
-        WARD_NAME: "ward",
-        MUN_NAME: "municipality",
       },
     });
   }

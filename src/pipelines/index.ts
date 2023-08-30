@@ -7,3 +7,6 @@ export * from "./properties";
 export * from "./bikeshares";
 export * from "./signals";
 export * from "./petal-graph";
+export * from "./ttc";
+export * from "./traffic";
+export * from "./traffic-aggregated";

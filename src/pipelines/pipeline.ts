@@ -3,6 +3,7 @@ import fs from "fs";
 import decompress, { File } from "decompress";
 import axios from "axios";
 import { db } from "../db";
+
 export const dataPath = "./data";
 export const tempDataPath = `${dataPath}/temp`;
 export const zipPath = `${tempDataPath}/zip`;
@@ -26,7 +27,10 @@ export interface PipelineArgs {
   propertyTypeMap?: PropertyTypeMap;
   propertyNameMap?: PropertyNameMap;
   propertyFilterMap?: PropertyFilterMap;
+  format?: FileFormat;
 }
+
+export type FileFormat = "csv" | "json" | "geojson";
 
 export class Pipeline {
   url?: string;
@@ -38,23 +42,30 @@ export class Pipeline {
   propertyTypeMap?: PropertyTypeMap; // fix type
   propertyNameMap?: PropertyNameMap; // fix type
   propertyFilterMap?: PropertyFilterMap; // fix type
+  format: FileFormat;
 
   constructor(args: PipelineArgs) {
-    const { url, name, propertyTypeMap, propertyNameMap, propertyFilterMap } =
-      args;
+    const {
+      url,
+      name,
+      propertyTypeMap,
+      propertyNameMap,
+      propertyFilterMap,
+      format = "geojson",
+    } = args;
     this.url = url;
     this.name = name;
     this.propertyTypeMap = propertyTypeMap;
     this.propertyNameMap = propertyNameMap;
     this.propertyFilterMap = propertyFilterMap;
-
+    this.format = format;
     if (this.name) {
       this.unzipPath = `${unzipPath}/${this.name}`;
       this.transformPath = `${transormedPath}/${this.name}`;
     }
   }
 
-  extract = () => {
+  extract = (log?: (progress?: number) => void) => {
     return new Promise(async (resolve, reject) => {
       if (!this.url || !this.name) {
         return resolve("No url or name defined.");
@@ -68,7 +79,7 @@ export class Pipeline {
         filename.endsWith(".zip") ? zipPath : this.unzipPath
       }/${filename}`;
 
-      console.log("Downloading", filename);
+      let totalDownloaded = 0;
 
       axios
         .get(this.url, { responseType: "stream" })
@@ -80,19 +91,19 @@ export class Pipeline {
             reject(error);
           });
 
+          res.data.on("data", (chunk: any) => {
+            totalDownloaded += chunk.length;
+            log && log(totalDownloaded / res.headers["content-length"]);
+          });
+
           fileStream.on("finish", () => {
             fileStream.close();
 
-            console.log("Downloaded", filename);
-
             if (filename.endsWith(".zip")) {
-              console.log("Unzipping", filename);
-
               // step 2. unzip file to data/temp/unzip
               decompress(filePath, this.unzipPath)
                 .then((files) => {
                   this.extractedDataPaths = files;
-                  console.log("Unzipped", filename);
                   resolve("Done unzipping/extracting.");
                 })
                 .catch((error: any) => {
@@ -118,10 +129,8 @@ export class Pipeline {
   // we can probably unify all the transform logic into this one place
   // if all are json/geojson files
   transform = () => {
-    console.log("Transforming", this.name);
     this.makeTransformedDataDirectory();
     this.childTransform();
-    console.log("Done transforming", this.name);
   };
 
   childTransform = () => {

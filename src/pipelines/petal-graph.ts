@@ -29,33 +29,31 @@ export class PetalGraphPipeline extends Pipeline {
   transform = () => {};
   load = async () => {
     return new Promise((resolve, reject) => {
-      // arriving / departing angles
-
       // 1. all intersections between edges in centreline
+      // added ST_GeometryN to remove all multipoints, only select first
+      // fix this
       const centreline_edges = `
         with connected_streets as 
             (select 
                 c1.id as street_a, 
                 c1.legal_name as sa_name, 
-                st_length(st_linemerge(c1.geometry)::geography) as len, 
                 c1.fcode as type, 
                 c2.id as street_b, 
                 c1.geometry sa_geom, 
                 c2.geometry sb_geom, 
-                st_intersection(c1.geometry, c2.geometry) pos 
+                ST_GeometryN(st_intersection(c1.geometry, c2.geometry),1) pos 
 	        from centreline c1 join centreline c2 on st_intersects(c1.geometry, c2.geometry) where c1.id != c2.id)
         select 
             cs.type as fcode, 
             cs.pos as A, 
             cs_joined.pos as B, 
             cs.sa_geom as street_geom, 
-            cs.len as street_length, 
             cs.sa_name as street_name, 
             cs.street_a as a_id, 
             cs.street_b as b_id 
         from connected_streets cs join connected_streets cs_joined on cs.street_a = cs_joined.street_a 
         where not st_equals(cs.pos, cs_joined.pos) 
-        group by cs.pos, cs_joined.pos, cs.sa_geom, cs.len, cs.sa_name, cs.street_a, cs.street_b, cs.type`;
+        group by cs.pos, cs_joined.pos, cs.sa_geom, cs.sa_name, cs.street_a, cs.street_b, cs.type`;
 
       const centreline_graph = `
         with 
@@ -78,9 +76,8 @@ export class PetalGraphPipeline extends Pipeline {
           a, a_intersection,
           b, b_intersection,
           street_geom geometry,
-          street_length length,
           street_name 
-      from centreline_graph group by fcode, a, b, street_geom, street_length , street_name, a_intersection, b_intersection)`;
+      from centreline_graph group by fcode, a, b, street_geom, street_name, a_intersection, b_intersection)`;
 
       // format and double check its right
       // this can definitely be wayyyy cleaner and simpler to get angles
@@ -101,8 +98,8 @@ export class PetalGraphPipeline extends Pipeline {
 
       const final_query = `
       ${table_with_angles}
-      insert into ${this.name} (id, fcode, a, a_intersection, b, b_intersection, geometry, length, street_name)
-        select * from initial_table
+      insert into ${this.name} (id, fcode, a, a_intersection, b, b_intersection, geometry, street_name, length)
+        select *, st_length(st_linemerge(geometry)::geography) from initial_table
     `;
 
       db.query(final_query)
