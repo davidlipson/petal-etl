@@ -18,6 +18,13 @@ export class BikesharesPipeline extends Pipeline {
         is_recharging_stations: DataTypes.BOOLEAN,
         rental_methods: DataTypes.ARRAY(DataTypes.STRING),
         geometry: DataTypes.GEOMETRY("POINT", 4326),
+        closest_edge_id: {
+          type: DataTypes.UUID,
+          references: {
+            model: "petal",
+            key: "id",
+          },
+        },
       },
     });
   }

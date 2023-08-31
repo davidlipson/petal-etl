@@ -27,6 +27,13 @@ export class AddressesPipeline extends Pipeline {
         fcode_description: DataTypes.STRING,
         classification: DataTypes.STRING,
         geometry: DataTypes.GEOMETRY("POINT", 4326),
+        closest_edge_id: {
+          type: DataTypes.UUID,
+          references: {
+            model: "petal",
+            key: "id",
+          },
+        },
       },
       propertyNameMap: {
         GEO_ID: "id",
