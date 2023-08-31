@@ -14,6 +14,13 @@ export interface runArgs {
   load: boolean;
 }
 
+export interface LoggerArgs {
+  progress?: number;
+  message?: string;
+}
+
+export type LoggerFn = (args?: LoggerArgs) => void;
+
 export class ETL {
   pipelines: Pipeline[];
   state?: ETLState;
@@ -23,17 +30,21 @@ export class ETL {
     this.pipelines = pipelines;
   }
 
-  log = (progress?: number) => {
+  log = (args?: LoggerArgs) => {
+    const progress = args?.progress
+      ? ` - ${(args.progress * 100).toFixed(2)}%`
+      : "";
+    const message = args?.message ? ` - ${args.message.toUpperCase()}` : "";
     let text = "";
-    const progressText = progress ? ` - ${(progress * 100).toFixed(2)}%` : "";
+    const endMessage = `${message}${progress}`;
     if (this.state && this.currentPipeline) {
       text =
-        `----- ${this.state}ING - ${this.currentPipeline.name}${progressText} ------`.toUpperCase();
+        `----- ${this.state}ING - ${this.currentPipeline.name}${endMessage} ------`.toUpperCase();
     } else if (this.state) {
-      text = `----- ${this.state}ING${progressText} ------`.toUpperCase();
+      text = `----- ${this.state}ING${endMessage} ------`.toUpperCase();
     } else if (this.currentPipeline) {
       text =
-        `----- ${this.currentPipeline.name}${progressText} ------`.toUpperCase();
+        `----- ${this.currentPipeline.name}${endMessage} ------`.toUpperCase();
     }
     process.stdout.clearLine(0);
     process.stdout.cursorTo(0);
@@ -60,7 +71,7 @@ export class ETL {
       } else if (state === ETLState.EXTRACT) {
         await pipeline.extract(this.log);
       } else if (state === ETLState.LOAD) {
-        await pipeline.load();
+        await pipeline.load(this.log);
       }
     }
   };

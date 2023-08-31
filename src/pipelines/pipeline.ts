@@ -3,6 +3,7 @@ import fs from "fs";
 import decompress, { File } from "decompress";
 import axios from "axios";
 import { db } from "../db";
+import { LoggerArgs, LoggerFn } from "../etl";
 
 export const dataPath = "./data";
 export const tempDataPath = `${dataPath}/temp`;
@@ -65,7 +66,7 @@ export class Pipeline {
     }
   }
 
-  extract = (log?: (progress?: number) => void) => {
+  extract = (log?: LoggerFn) => {
     return new Promise(async (resolve, reject) => {
       if (!this.url || !this.name) {
         return resolve("No url or name defined.");
@@ -93,7 +94,10 @@ export class Pipeline {
 
           res.data.on("data", (chunk: any) => {
             totalDownloaded += chunk.length;
-            log && log(totalDownloaded / res.headers["content-length"]);
+            log &&
+              log({
+                progress: totalDownloaded / res.headers["content-length"],
+              });
           });
 
           fileStream.on("finish", () => {
@@ -158,7 +162,7 @@ export class Pipeline {
     });
   };
 
-  load = () => {
+  load = (log?: LoggerFn) => {
     return new Promise((resolve, reject) => {
       if (this.propertyTypeMap && this.transformedGeoJsonPath && this.name) {
         const file = fs.readFileSync(this.transformedGeoJsonPath);

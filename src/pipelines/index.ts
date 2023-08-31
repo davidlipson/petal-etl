@@ -9,4 +9,6 @@ export * from "./signals";
 export * from "./petal-graph";
 export * from "./ttc";
 export * from "./traffic";
-export * from "./traffic-aggregated";
+export * from "./scores";
+export * from "./address-closest-edge";
+export * from "./bikeshare-closest-edge";

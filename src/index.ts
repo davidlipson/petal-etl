@@ -1,7 +1,9 @@
 import { clearTempFiles, parseFlags } from "./helpers";
 import { db } from "./db";
 import {
+  AddressClosestEdgePipeline,
   AddressesPipeline,
+  BikeshareClosestEdgePipeline,
   BikesharesPipeline,
   BikewaysPipeline,
   CentrelinePipeline,
@@ -9,9 +11,9 @@ import {
   NeighbourhoodsPipeline,
   PetalGraphPipeline,
   PropertiesPipeline,
+  ScoresPipeline,
   SignalsPipeline,
   TTCPipeline,
-  TrafficAggPipeline,
   TrafficPipeline,
 } from "./pipelines";
 import { Pipeline } from "./pipelines/pipeline";
@@ -23,20 +25,24 @@ import { ETL } from "./etl";
 
   // add flags to select which pipelines to run
   const pipelines: Pipeline[] = [
-    /*new SignalsPipeline(),
-    new CrossoverPipeline(),
+    /* new SignalsPipeline(),
     new CentrelinePipeline(),
     new TrafficPipeline(),
-    new BikesharesPipeline(),
-    new AddressesPipeline(),
+    
+    
     new PropertiesPipeline(),
     new GreenspacesPipeline(),
     new NeighbourhoodsPipeline(),
-    new BikewaysPipeline(),
+    new BikewaysPipeline(),*/
+
     // secondary tables
-    ,*/
-    new PetalGraphPipeline(),
-    //new TrafficAggPipeline(),
+
+    // new PetalGraphPipeline(),
+    new ScoresPipeline(),
+    // new AddressesPipeline(),
+    //new BikesharesPipeline(),
+    //new BikeshareClosestEdgePipeline(),
+    //new AddressClosestEdgePipeline(),
 
     // finally, put all weights into final weights table
   ];
