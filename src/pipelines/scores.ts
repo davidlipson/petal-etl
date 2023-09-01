@@ -10,8 +10,8 @@ import { LoggerFn } from "../etl";
 */
 
 // scores
-// [0,1] normalized values
-// 0 = most safe, 1 = least safe
+// [-1,1] normalized values
+// -1 = most safe, 1 = least safe
 
 export class ScoresPipeline extends Pipeline {
   constructor() {
@@ -46,7 +46,9 @@ export class ScoresPipeline extends Pipeline {
     await this.trafficScore(log);
     await this.fcodeTrafficScore(log);
     await this.fastScore(log);
+    await this.safeScore(log);
   };
+
   insertScore = async (withQueries: string[], fieldName: string) => {
     return new Promise((resolve, reject) => {
       const query = `
@@ -82,7 +84,8 @@ export class ScoresPipeline extends Pipeline {
                 st_intersects(b.geometry , p.geometry) and 
                 st_geometrytype(st_intersection(b.geometry , p.geometry)) != 'ST_Point'
         )`,
-      `finalWith as (select id, 1 - max(coverage) as ${fieldName} from intersections group by 1)`,
+      // FIX THIS
+      `finalWith as (select id, 1 - 2*max(coverage) as ${fieldName} from intersections group by 1)`,
     ];
     return this.insertScore(withQueries, fieldName);
   };
@@ -109,6 +112,7 @@ export class ScoresPipeline extends Pipeline {
             avg(nx_bike + wx_bike + ex_bike + sx_bike) bike_average,
             avg(((sb_cars_t + nb_cars_t + eb_cars_t + wb_cars_t) + (sb_bus_t + nb_bus_t + eb_bus_t + wb_bus_t) + (sb_truck_t + nb_truck_t + eb_truck_t + wb_truck_t)) / nullif(nx_bike + wx_bike + ex_bike + sx_bike, 0)) vehicles_per_bike
         from traffic group by 1)`,
+      // FIX THIS TO BE -1,1
       `traffic_aggregated as 
         (select *, (vehicles_per_bike - min(vehicles_per_bike) OVER ()) / (max(vehicles_per_bike) OVER () - min(vehicles_per_bike) OVER ()) as ${fieldName} from avgs where vehicles_per_bike is not null)`,
       `finalWith as (select p.id, ${fieldName} from traffic_aggregated ta join petal p on st_intersects(ta.geometry, p.a) group by 1, 2)`,
@@ -130,10 +134,40 @@ export class ScoresPipeline extends Pipeline {
 
   // move into petal final table
   fastScore = async (log?: LoggerFn) => {
+    // % of street length that we want to multiply by
+    // kinda arbitrary, just testing for now
+    const weights = {
+      length_score: 1,
+      bikeway_score: 0.3,
+      traffic_score: 1,
+    };
+
     const fieldName = "fast_score";
     log && log({ message: "Fast Score" });
     const withQueries = [
-      `finalWith as (select id, length as ${fieldName} from petal)`,
+      `finalWith as 
+        (select id, length as ${fieldName} from petal)`,
+    ];
+    return this.insertScore(withQueries, fieldName);
+  };
+
+  // move into petal final table
+  safeScore = async (log?: LoggerFn) => {
+    // % of street length that we want to multiply by
+    // kinda arbitrary, just testing for now
+    const weights = {
+      length_score: 1,
+      bikeway_score: 0.3,
+      traffic_score: 1,
+    };
+
+    const fieldName = "safe_score";
+    log && log({ message: "Safe Score" });
+    const withQueries = [
+      `finalWith as 
+        (select p.id, 
+          p.length*(${weights.length_score} + ${weights.bikeway_score}*coalesce(s.bikeway_score,0) + ${weights.traffic_score}*coalesce(s.traffic_score, s.fcode_traffic_score, 0)) as ${fieldName}
+        from petal p join scores s on p.id = s.id)`,
     ];
     return this.insertScore(withQueries, fieldName);
   };
