@@ -4,6 +4,13 @@ console.log("DATABASE_URL", process.env.DATABASE_URL);
 if (process.env.DATABASE_URL) {
   sql = new Sequelize(process.env.DATABASE_URL, {
     logging: false,
+    dialect: "postgres",
+    dialectOptions: {
+      ssl: {
+        require: false,
+        rejectUnauthorized: false,
+      },
+    },
   });
 } else {
   sql = new Sequelize({
