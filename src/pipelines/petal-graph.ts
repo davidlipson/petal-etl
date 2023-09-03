@@ -18,6 +18,16 @@ export class PetalGraphPipeline extends Pipeline {
         length: DataTypes.FLOAT,
         departing_angle: DataTypes.FLOAT,
         arriving_angle: DataTypes.FLOAT,
+        direction: DataTypes.ENUM(
+          "NORTH",
+          "NORTHEAST",
+          "EAST",
+          "SOUTHEAST",
+          "SOUTH",
+          "SOUTHWEST",
+          "WEST",
+          "NORTHWEST"
+        ),
         a: DataTypes.GEOMETRY,
         b: DataTypes.GEOMETRY,
         geometry: DataTypes.GEOMETRY,
@@ -28,6 +38,11 @@ export class PetalGraphPipeline extends Pipeline {
   extract = async () => {};
   transform = () => {};
   load = async () => {
+    await this.initialLoad();
+    await this.addAngles();
+  };
+
+  initialLoad = async () => {
     return new Promise((resolve, reject) => {
       // 1. all intersections between edges in centreline
       // added ST_GeometryN to remove all multipoints, only select first
@@ -110,5 +125,61 @@ export class PetalGraphPipeline extends Pipeline {
           return reject(err);
         });
     });
+  };
+
+  addAngles = async () => {
+    const fieldNames = ["departing_angle", "arriving_angle", "direction"];
+    /*
+    ordinalDirection(): Cardinal {
+    if (this.departing_angle <= 22.5 || this.departing_angle > 337.5) {
+      return Cardinal.N;
+    } else if (this.departing_angle <= 67.5) {
+      return Cardinal.NE;
+    } else if (this.departing_angle <= 112.5) {
+      return Cardinal.E;
+    } else if (this.departing_angle <= 157.5) {
+      return Cardinal.SE;
+    } else if (this.departing_angle <= 202.5) {
+      return Cardinal.S;
+    } else if (this.departing_angle <= 247.5) {
+      return Cardinal.SW;
+    } else if (this.departing_angle <= 292.5) {
+      return Cardinal.W;
+    } else {
+      return Cardinal.NW;
+    }
+  }*/
+    const withQueries = [
+      `angles as 
+        (select 
+          id, a, 
+          degrees(
+            st_azimuth(
+              a, 
+              st_closestpoint(
+                st_exteriorring(
+                  st_buffer(a::geography, 5)::geometry), 
+                geometry)
+            )
+          ) as angle, b, geometry from petal)`,
+      `finalWith as 
+          (select 
+            a1.id, a1.angle departing_angle, a2.angle arriving_angle,
+            (case
+              when a1.angle <= 22.5 or a1.angle > 337.5 then 'NORTH'
+              when a1.angle <= 67.5 then 'NORTHEAST'
+              when a1.angle <= 112.5 then 'EAST'
+              when a1.angle <= 157.5 then 'SOUTHEAST'
+              when a1.angle <= 202.5 then 'SOUTH'
+              when a1.angle <= 247.5 then 'SOUTHWEST'
+              when a1.angle <= 292.5 then 'WEST'
+              else 'NORTHWEST'
+            end)::enum_petal_direction as direction
+          from angles a1 join angles a2 on 
+            a1.b = a2.a and a1.a = a2.b and a1.geometry = a2.geometry
+          group by 1, 2, 3)`,
+    ];
+    // change = to st_equals?
+    await this.insertColumnByID(withQueries, fieldNames);
   };
 }

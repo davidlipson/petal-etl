@@ -5,6 +5,7 @@ import axios from "axios";
 import { db } from "../db";
 import { LoggerFn } from "../etl";
 
+// this isn't working on heroku...
 export const rootDir = process.env.PRODUCTION ? "/tmp" : ".";
 export const dataPath = `${rootDir}/data`;
 export const tempDataPath = `${dataPath}/temp`;
@@ -129,6 +130,33 @@ export class Pipeline {
 
   childTransform = () => {
     this.transformGeoJson();
+  };
+
+  insertColumnByID = async (withQueries: string[], fieldNames: string[]) => {
+    return new Promise((resolve, reject) => {
+      const query = `
+        with ${withQueries.join(", ")}
+        insert into ${this.name} (id, ${fieldNames.join(", ")})
+        select id, ${fieldNames.join(
+          ", "
+        )} from finalWith group by ${Array.from(
+        Array(fieldNames.length + 1).keys()
+      )
+        .map((i) => i + 1)
+        .join(", ")}
+        on conflict (id) do update set ${fieldNames
+          .map((f) => `${f} = excluded.${f}`)
+          .join(", ")}
+        `;
+
+      db.query(query)
+        .then((res) => {
+          return resolve(res);
+        })
+        .catch((err) => {
+          return reject(err);
+        });
+    });
   };
 
   defineModal = () => {

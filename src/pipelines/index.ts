@@ -12,3 +12,4 @@ export * from "./traffic";
 export * from "./scores";
 export * from "./address-closest-edge";
 export * from "./bikeshare-closest-edge";
+export * from "./blocks";

@@ -6,6 +6,7 @@ import {
   BikeshareClosestEdgePipeline,
   BikesharesPipeline,
   BikewaysPipeline,
+  BlocksPipeline,
   CentrelinePipeline,
   GreenspacesPipeline,
   NeighbourhoodsPipeline,
@@ -21,8 +22,8 @@ import { ETL } from "./etl";
 (async () => {
   // add flags to select which pipelines to run
   const pipelines: Pipeline[] = [
-    new SignalsPipeline(),
-    /*new TrafficPipeline(),
+    /* new SignalsPipeline(),
+    new TrafficPipeline(),
     new PropertiesPipeline(),
     new GreenspacesPipeline(),
     new NeighbourhoodsPipeline(),
@@ -31,12 +32,13 @@ import { ETL } from "./etl";
 
     // secondary tables
 
-    /*new PetalGraphPipeline(),
-    new ScoresPipeline(),
+    //new PetalGraphPipeline(),
+    /*new ScoresPipeline(),
     new AddressesPipeline(),
     new BikesharesPipeline(),
     new BikeshareClosestEdgePipeline(),
     new AddressClosestEdgePipeline(),*/
+    new BlocksPipeline(),
   ];
 
   const args = parseFlags();

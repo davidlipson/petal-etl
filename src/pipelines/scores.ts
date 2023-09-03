@@ -49,25 +49,6 @@ export class ScoresPipeline extends Pipeline {
     await this.safeScore(log);
   };
 
-  insertScore = async (withQueries: string[], fieldName: string) => {
-    return new Promise((resolve, reject) => {
-      const query = `
-        with ${withQueries.join(", ")}
-        insert into ${this.name} (id, ${fieldName})
-        select id, ${fieldName} from finalWith group by 1, 2
-        on conflict (id) do update set ${fieldName} = excluded.${fieldName}
-        `;
-
-      db.query(query)
-        .then((res) => {
-          return resolve(res);
-        })
-        .catch((err) => {
-          return reject(err);
-        });
-    });
-  };
-
   // 1 - % of street covered by a bikeway
   // thus, 0 = completely covered, 1 = not covered at all
   // should only do by bikeway going same direction!
@@ -87,13 +68,14 @@ export class ScoresPipeline extends Pipeline {
       // FIX THIS
       `finalWith as (select id, 1 - 2*max(coverage) as ${fieldName} from intersections group by 1)`,
     ];
-    return this.insertScore(withQueries, fieldName);
+    return this.insertColumnByID(withQueries, [fieldName]);
   };
 
   // normalized values of amount of vehicles per bike going through the intersection per 15 min
   // 0 = least amount of vehicles per bike, 1 = most amount of vehicles per bike
   //SHOULD ONLY DO BY DIRECTIONAL TRAFFIC - TODO
   // maybe doing this / by bike isn't helpful should just be overall traffic
+  // update by direction of bike
   trafficScore = async (log?: LoggerFn) => {
     log && log({ message: "Traffic Score" });
     const fieldName = "traffic_score";
@@ -117,7 +99,7 @@ export class ScoresPipeline extends Pipeline {
         (select *, (vehicles_per_bike - min(vehicles_per_bike) OVER ()) / (max(vehicles_per_bike) OVER () - min(vehicles_per_bike) OVER ()) as ${fieldName} from avgs where vehicles_per_bike is not null)`,
       `finalWith as (select p.id, ${fieldName} from traffic_aggregated ta join petal p on st_intersects(ta.geometry, p.a) group by 1, 2)`,
     ];
-    return this.insertScore(withQueries, fieldName);
+    return this.insertColumnByID(withQueries, [fieldName]);
   };
 
   // useful or no?
@@ -129,7 +111,7 @@ export class ScoresPipeline extends Pipeline {
       `fcode_avgs as (select fcode, avg(traffic_score) ${fieldName} from ts join petal on ts.id = petal.id group by 1)`,
       `finalWith as (select p.id, ${fieldName} from petal p join fcode_avgs f on p.fcode = f.fcode)`,
     ];
-    return this.insertScore(withQueries, fieldName);
+    return this.insertColumnByID(withQueries, [fieldName]);
   };
 
   // move into petal final table
@@ -148,7 +130,7 @@ export class ScoresPipeline extends Pipeline {
       `finalWith as 
         (select id, length as ${fieldName} from petal)`,
     ];
-    return this.insertScore(withQueries, fieldName);
+    return this.insertColumnByID(withQueries, [fieldName]);
   };
 
   // move into petal final table
@@ -169,6 +151,6 @@ export class ScoresPipeline extends Pipeline {
           p.length*(${weights.length_score} + ${weights.bikeway_score}*coalesce(s.bikeway_score,0) + ${weights.traffic_score}*coalesce(s.traffic_score, s.fcode_traffic_score, 0)) as ${fieldName}
         from petal p join scores s on p.id = s.id)`,
     ];
-    return this.insertScore(withQueries, fieldName);
+    return this.insertColumnByID(withQueries, [fieldName]);
   };
 }
