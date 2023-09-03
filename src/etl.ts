@@ -46,11 +46,7 @@ export class ETL {
       text =
         `----- ${this.currentPipeline.name}${endMessage} ------`.toUpperCase();
     }
-    if (
-      process.stdout.clearLine &&
-      process.stdout.cursorTo &&
-      process.stdout.write
-    ) {
+    if (!process.env.PRODUCTION) {
       process.stdout.clearLine(0);
       process.stdout.cursorTo(0);
       process.stdout.write(`${text}`);
