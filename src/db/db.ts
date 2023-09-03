@@ -1,30 +1,24 @@
-import { Sequelize } from "sequelize";
+import { Options, Sequelize } from "sequelize";
+const basicSettings: Options = {
+  logging: false,
+  dialect: "postgres",
+  dialectOptions: {
+    ssl: {
+      require: false,
+      rejectUnauthorized: false,
+    },
+  },
+};
 let sql;
 console.log("DATABASE_URL", process.env.DATABASE_URL);
 if (process.env.DATABASE_URL) {
-  sql = new Sequelize(process.env.DATABASE_URL, {
-    logging: false,
-    dialect: "postgres",
-    dialectOptions: {
-      ssl: {
-        require: false,
-        rejectUnauthorized: false,
-      },
-    },
-  });
+  sql = new Sequelize(process.env.DATABASE_URL, basicSettings);
 } else {
   sql = new Sequelize({
-    dialect: "postgres",
+    ...basicSettings,
     host: process.env.DB_HOST || "localhost",
     port: parseInt(process.env.DB_PORT || "5432"),
     database: process.env.DB_NAME || "petaldev",
-    logging: false,
-    dialectOptions: {
-      ssl: {
-        require: false,
-        rejectUnauthorized: false,
-      },
-    },
   });
 }
 

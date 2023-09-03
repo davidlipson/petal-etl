@@ -45,7 +45,7 @@ import { ETL } from "./etl";
   // initialize db
   db.query("CREATE EXTENSION IF NOT EXISTS postgis;")
     .then(async () => {
-      db.query(`CREATE DATABASE IF NOT EXISTS petaldb`)
+      db.query(`CREATE DATABASE IF NOT EXISTS petaldb;`)
         .then(async () => {
           db.query(`USE petaldb;`)
             .then(async () => {
