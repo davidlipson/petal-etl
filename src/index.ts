@@ -21,7 +21,7 @@ import { ETL } from "./etl";
 (async () => {
   // add flags to select which pipelines to run
   const pipelines: Pipeline[] = [
-    /*new SignalsPipeline(),
+    new SignalsPipeline(),
     new CentrelinePipeline(),
     new TrafficPipeline(),
     new PropertiesPipeline(),
@@ -35,7 +35,7 @@ import { ETL } from "./etl";
     new ScoresPipeline(),
     new AddressesPipeline(),
     new BikesharesPipeline(),
-    new BikeshareClosestEdgePipeline(),*/
+    new BikeshareClosestEdgePipeline(),
     new AddressClosestEdgePipeline(),
   ];
 
