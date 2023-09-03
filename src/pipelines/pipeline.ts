@@ -3,7 +3,7 @@ import fs from "fs";
 import decompress, { File } from "decompress";
 import axios from "axios";
 import { db } from "../db";
-import { LoggerArgs, LoggerFn } from "../etl";
+import { LoggerFn } from "../etl";
 
 export const dataPath = "./data";
 export const tempDataPath = `${dataPath}/temp`;
