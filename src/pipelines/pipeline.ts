@@ -95,7 +95,7 @@ export class Pipeline {
           res.data.on("data", (chunk: any) => {
             totalDownloaded += chunk.length;
             log &&
-              process.env.PRODUCTION &&
+              !process.env.PRODUCTION &&
               log({
                 progress: totalDownloaded / res.headers["content-length"],
               });
