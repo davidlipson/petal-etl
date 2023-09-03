@@ -12,6 +12,7 @@ if (process.env.DATABASE_URL) {
     port: parseInt(process.env.DB_PORT || "5432"),
     database: process.env.DB_NAME || "petaldev",
     logging: false,
+    ssl: false,
   });
 }
 
