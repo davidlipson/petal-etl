@@ -1,6 +1,5 @@
 import path from "path";
 import fs from "fs";
-import decompress, { File } from "decompress";
 import axios from "axios";
 import { db } from "../db";
 import { LoggerFn } from "../etl";
@@ -15,8 +14,10 @@ export type PropertyTypeMap = { [key: string]: any };
 export type PropertyNameMap = { [key: string]: string };
 export type PropertyFilterMap = { [key: string]: any[] };
 
+const decompress = require("decompress");
+
 export type SimpleFile =
-  | File
+  | decompress.File
   | {
       data: Buffer;
       path: string;
