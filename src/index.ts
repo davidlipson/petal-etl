@@ -1,4 +1,4 @@
-import { clearTempFiles, parseFlags } from "./helpers";
+import { parseFlags } from "./helpers";
 import { db } from "./db";
 import {
   AddressClosestEdgePipeline,
@@ -13,47 +13,41 @@ import {
   PropertiesPipeline,
   ScoresPipeline,
   SignalsPipeline,
-  TTCPipeline,
   TrafficPipeline,
 } from "./pipelines";
 import { Pipeline } from "./pipelines/pipeline";
-import dotenv from "dotenv";
 import { ETL } from "./etl";
 
 (async () => {
-  dotenv.config();
-
   // add flags to select which pipelines to run
   const pipelines: Pipeline[] = [
-    /* new SignalsPipeline(),
+    /*new SignalsPipeline(),
     new CentrelinePipeline(),
     new TrafficPipeline(),
-    
-    
     new PropertiesPipeline(),
     new GreenspacesPipeline(),
     new NeighbourhoodsPipeline(),
-    new BikewaysPipeline(),*/
+    new BikewaysPipeline(),
 
     // secondary tables
 
-    // new PetalGraphPipeline(),
+    new PetalGraphPipeline(),
     new ScoresPipeline(),
-    // new AddressesPipeline(),
-    //new BikesharesPipeline(),
-    //new BikeshareClosestEdgePipeline(),
-    //new AddressClosestEdgePipeline(),
-
-    // finally, put all weights into final weights table
+    new AddressesPipeline(),
+    new BikesharesPipeline(),
+    new BikeshareClosestEdgePipeline(),*/
+    new AddressClosestEdgePipeline(),
   ];
 
   const args = parseFlags();
+  console.log(`Starting ETL at ${new Date()} with args: `, args);
 
   // initialize db
   db.query("CREATE EXTENSION IF NOT EXISTS postgis;")
     .then(async () => {
       const etl = new ETL(pipelines);
       await etl.run(args);
+      console.log(`Finishing ETL at ${new Date()}.`);
     })
     .catch((err) => {
       console.log(err);
