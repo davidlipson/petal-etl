@@ -1,5 +1,6 @@
 import { DataTypes } from "sequelize";
 import { Pipeline } from "./pipeline";
+import fs from "fs";
 
 // NOTE THIS IS NOT EVERY INTERSECTION!
 export class TrafficPipeline extends Pipeline {
@@ -76,26 +77,29 @@ export class TrafficPipeline extends Pipeline {
 
   childTransform = () => {
     if (this.extractedDataPaths && this.extractedDataPaths.length > 0) {
-      const file = this.extractedDataPaths[0];
-      const jsonData = JSON.parse(file.data.toString());
-      const transformedData = jsonData.map((row: any) => {
-        const newRow = {
-          id: row._id,
-          geometry: {
-            type: "Point",
-            coordinates: [row.lng, row.lat],
-          },
-          ...row,
-        };
-        delete newRow._id;
-        delete newRow.lat;
-        delete newRow.lng;
-        return newRow;
-      });
+      const path = this.extractedDataPaths[0];
+      const file = fs.readFileSync(path);
+      if (file) {
+        const jsonData = JSON.parse(file.toString());
+        const transformedData = jsonData.map((row: any) => {
+          const newRow = {
+            id: row._id,
+            geometry: {
+              type: "Point",
+              coordinates: [row.lng, row.lat],
+            },
+            ...row,
+          };
+          delete newRow._id;
+          delete newRow.lat;
+          delete newRow.lng;
+          return newRow;
+        });
 
-      this.saveTransformedData({
-        features: transformedData,
-      });
+        this.saveTransformedData({
+          features: transformedData,
+        });
+      }
     }
   };
 }

@@ -2,17 +2,19 @@ import { Options, Sequelize } from "sequelize";
 const basicSettings: Options = {
   logging: false,
   dialect: "postgres",
-  dialectOptions: {
-    ssl: {
-      require: false,
-      rejectUnauthorized: false,
-    },
-  },
 };
 let sql;
 console.log("DATABASE_URL", process.env.DATABASE_URL);
 if (process.env.DATABASE_URL) {
-  sql = new Sequelize(process.env.DATABASE_URL, basicSettings);
+  sql = new Sequelize(process.env.DATABASE_URL, {
+    ...basicSettings,
+    dialectOptions: {
+      ssl: {
+        require: false,
+        rejectUnauthorized: false,
+      },
+    },
+  });
 } else {
   sql = new Sequelize({
     ...basicSettings,

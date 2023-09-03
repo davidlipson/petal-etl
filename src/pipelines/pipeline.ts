@@ -15,13 +15,6 @@ export type PropertyTypeMap = { [key: string]: any };
 export type PropertyNameMap = { [key: string]: string };
 export type PropertyFilterMap = { [key: string]: any[] };
 
-export type SimpleFile =
-  | File
-  | {
-      data: Buffer;
-      path: string;
-    };
-
 export interface PipelineArgs {
   url?: string;
   name?: string;
@@ -38,7 +31,7 @@ export class Pipeline {
   name?: string;
   unzipPath?: string;
   transformPath?: string;
-  extractedDataPaths?: SimpleFile[];
+  extractedDataPaths?: string[];
   transformedGeoJsonPath?: string;
   propertyTypeMap?: PropertyTypeMap; // fix type
   propertyNameMap?: PropertyNameMap; // fix type
@@ -108,19 +101,14 @@ export class Pipeline {
               // step 2. unzip file to data/temp/unzip
               decompress(filePath, this.unzipPath)
                 .then((files) => {
-                  this.extractedDataPaths = files;
+                  this.extractedDataPaths = files.map((file) => file.path);
                   resolve("Done unzipping/extracting.");
                 })
                 .catch((error: any) => {
                   reject(error);
                 });
             } else {
-              this.extractedDataPaths = [
-                {
-                  data: fs.readFileSync(filePath),
-                  path: filePath,
-                },
-              ];
+              this.extractedDataPaths = [filePath];
               resolve("Done extracting.");
             }
           });
@@ -190,29 +178,32 @@ export class Pipeline {
       this.extractedDataPaths.length > 0 &&
       this.propertyNameMap
     ) {
-      const file = this.extractedDataPaths[0];
-      const propertyMap = this.propertyNameMap;
-      const filters = this.propertyFilterMap;
-      let jsonData = JSON.parse(file.data.toString());
-      jsonData.features.forEach((feature: any) => {
-        delete feature.type;
-        Object.keys(feature.properties).forEach((property: any) => {
-          if (propertyMap[property]) {
-            feature[propertyMap[property] || property] =
-              feature.properties[property];
-          }
-          delete feature.properties[property];
-        });
-        delete feature.properties;
-      });
-      if (filters) {
-        Object.keys(filters).forEach((filter: any) => {
-          jsonData.features = jsonData.features.filter((row: any) => {
-            return filters[filter].includes(row[filter]);
+      const path = this.extractedDataPaths[0];
+      const file = path ? fs.readFileSync(path) : null;
+      if (file) {
+        const propertyMap = this.propertyNameMap;
+        const filters = this.propertyFilterMap;
+        let jsonData = JSON.parse(file.toString());
+        jsonData.features.forEach((feature: any) => {
+          delete feature.type;
+          Object.keys(feature.properties).forEach((property: any) => {
+            if (propertyMap[property]) {
+              feature[propertyMap[property] || property] =
+                feature.properties[property];
+            }
+            delete feature.properties[property];
           });
+          delete feature.properties;
         });
+        if (filters) {
+          Object.keys(filters).forEach((filter: any) => {
+            jsonData.features = jsonData.features.filter((row: any) => {
+              return filters[filter].includes(row[filter]);
+            });
+          });
+        }
+        this.saveTransformedData(jsonData);
       }
-      this.saveTransformedData(jsonData);
     }
   };
 

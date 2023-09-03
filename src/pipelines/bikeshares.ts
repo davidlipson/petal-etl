@@ -1,5 +1,6 @@
 import { DataTypes } from "sequelize";
 import { Pipeline } from "./pipeline";
+import fs from "fs";
 
 export class BikesharesPipeline extends Pipeline {
   constructor() {
@@ -31,11 +32,12 @@ export class BikesharesPipeline extends Pipeline {
 
   // switch this to standard flow?
   childTransform = () => {
-    const file = this.extractedDataPaths?.find((file) =>
-      file.path.endsWith("station_information")
+    const path = this.extractedDataPaths?.find((file) =>
+      file.endsWith("station_information")
     );
+    const file = path ? fs.readFileSync(path) : null;
     if (file) {
-      const jsonData = JSON.parse(file.data.toString());
+      const jsonData = JSON.parse(file.toString());
       const transformedData = jsonData.data.stations.map((station: any) => {
         const newStation = {
           ...station,
