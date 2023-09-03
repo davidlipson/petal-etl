@@ -46,9 +46,17 @@ export class ETL {
       text =
         `----- ${this.currentPipeline.name}${endMessage} ------`.toUpperCase();
     }
-    process.stdout.clearLine(0);
-    process.stdout.cursorTo(0);
-    process.stdout.write(`${text}`);
+    if (
+      process.stdout.clearLine &&
+      process.stdout.cursorTo &&
+      process.stdout.write
+    ) {
+      process.stdout.clearLine(0);
+      process.stdout.cursorTo(0);
+      process.stdout.write(`${text}`);
+    } else {
+      console.log(text);
+    }
   };
 
   setState = (state: ETLState) => {
