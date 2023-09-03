@@ -45,9 +45,22 @@ import { ETL } from "./etl";
   // initialize db
   db.query("CREATE EXTENSION IF NOT EXISTS postgis;")
     .then(async () => {
-      const etl = new ETL(pipelines);
-      await etl.run(args);
-      console.log(`Finishing ETL at ${new Date()}.`);
+      db.query(`CREATE DATABASE IF NOT EXISTS petaldb`)
+        .then(async () => {
+          db.query(`USE petaldb;`)
+            .then(async () => {
+              console.log("Connected to database.");
+              const etl = new ETL(pipelines);
+              await etl.run(args);
+              console.log(`Finishing ETL at ${new Date()}.`);
+            })
+            .catch((err) => {
+              console.log(err);
+            });
+        })
+        .catch((err) => {
+          console.log(err);
+        });
     })
     .catch((err) => {
       console.log(err);
