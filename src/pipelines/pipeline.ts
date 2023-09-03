@@ -5,7 +5,8 @@ import axios from "axios";
 import { db } from "../db";
 import { LoggerFn } from "../etl";
 
-export const dataPath = "./data";
+export const rootDir = process.env.PRODUCTION ? "/tmp" : ".";
+export const dataPath = `${rootDir}/data`;
 export const tempDataPath = `${dataPath}/temp`;
 export const zipPath = `${tempDataPath}/zip`;
 export const unzipPath = `${tempDataPath}/unzip`;
